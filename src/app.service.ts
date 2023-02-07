@@ -114,7 +114,8 @@ export class AppService {
             attributes: ['workTime'],
             where: {userId: from.id, forwardMonth: thisMonth, forwardYear: thisYear}
         });
-        return ctx.reply(`Время за текущий месяц: ${this.parseMillisecondsToTime(arrayOfMilliseconds)}`, this.keyboard)
+        await ctx.reply(`Время за текущий месяц: ${this.parseMillisecondsToTime(arrayOfMilliseconds)}`, this.keyboard)
+        return
     }
 
     @Hears(previousMonthKey)
