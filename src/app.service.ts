@@ -1,11 +1,11 @@
 import {Injectable} from "@nestjs/common";
-import {Command, Ctx, Hears, On, Start, Update} from "nestjs-telegraf";
+import {Ctx, Hears, On, Start, Update} from "nestjs-telegraf";
 import {User} from "./entities/User";
 import {InjectModel} from "@nestjs/sequelize";
 import {ConfigService} from "@nestjs/config";
 import {Record} from "./entities/Record";
-import {millisecondsToHours} from 'date-fns'
 import {Markup} from "telegraf";
+import {PuppeteerService} from "./puppeteer.service";
 
 type ContextFromType = {
     id: number,
@@ -34,7 +34,8 @@ export class AppService {
 
     constructor(private configService: ConfigService,
                 @InjectModel(User) private userModel: typeof User,
-                @InjectModel(Record) private recordModel: typeof Record
+                @InjectModel(Record) private recordModel: typeof Record,
+                private readonly puppeteerService: PuppeteerService
     ) {
         this.parentBotId = parseInt(this.configService.get("PARENT_BOT_ID"), 10);
     }
@@ -71,7 +72,7 @@ export class AppService {
         totalCount = (totalCount - secs) / 60;
         const mins = totalCount % 60;
         const hrs = (totalCount - mins) / 60;
-        return hrs + ':' + mins + ':' + secs;
+        return hrs + ':' + mins;
     }
 
 
@@ -79,7 +80,8 @@ export class AppService {
         [currentMonthKey],
         [previousMonthKey],
     ]).resize()
-        // .oneTime()
+
+    // .oneTime()
 
     @Start()
     async newUserInit(@Ctx() ctx: any) {
@@ -129,6 +131,16 @@ export class AppService {
         });
         await ctx.reply(`Время за прошлый месяц: ${this.parseMillisecondsToTime(arrayOfMilliseconds)}`, this.keyboard)
         return
+    }
+
+    @Hears('login')
+    async create(@Ctx() ctx: any) {
+        return this.puppeteerService.login()
+    }
+
+    @Hears('get')
+    async get(@Ctx() ctx: any) {
+        return this.puppeteerService.getPages()
     }
 
 
